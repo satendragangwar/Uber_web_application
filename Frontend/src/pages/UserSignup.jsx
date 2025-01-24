@@ -1,29 +1,49 @@
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link , useNavigate } from "react-router-dom";
 import { useState,useCallback } from "react";
-
+import axios from 'axios';
+import {UserDataContext} from '../context/UserContext'
 const UserSignup = () => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [firstname,setFirstname] = useState('')
     const [lastname,setLastname] = useState('')
-    const [userData,setUserData] = useState({})
-
     
-    const Submithandler = (e)=>{
+
+    const navigate = useNavigate();
+    const {setUser} = React.useContext(UserDataContext);
+    const Submithandler = async(e)=>{
         e.preventDefault();
-       setUserData({
-        fullname:{
-            firstname:firstname,
-            lastname:lastname
-        },
-        email:email,
-        password:password
-       })
-        setEmail('')
-        setPassword('')
-        setFirstname('')
-        setLastname('')
+        try {
+          const newUser = {
+              fullname: {
+                  firstname: firstname,
+                  lastname: lastname,
+              },
+              email: email,
+              password: password,
+          };
+  
+          const response = await axios.post(
+              `${import.meta.env.VITE_BASE_URL}/users/register`,
+              newUser
+          );
+  
+          if (response.status === 200) {
+              const data = response.data;
+              setUser(data.user);
+              localStorage.setItem('token',data.token)
+              navigate('/home');
+          }
+          setEmail('');
+          setPassword('');
+          setFirstname('');
+          setLastname('');
+      } catch (error) {
+          console.error('Error during registration:', error.message);
+          alert('Registration failed. Please try again.');
+      }
     }
     
     const handlePasswordChange = useCallback((e) => {
@@ -98,7 +118,7 @@ const UserSignup = () => {
             onChange={handlePasswordChange}
           />
           <button className="bg-[#111] text-white font-semibold mb-1 rounded px-4 py-2  w-full text-lg placeholder:text-base">
-            Login
+            Create account
           </button>
           <p className="text-center">
             Already have an account? 
